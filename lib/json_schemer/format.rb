@@ -51,8 +51,10 @@ module JSONSchemer
     end
 
     def valid_json?(data)
-      FastJsonparser.parse(data)
-      true
+      Datadog.tracer.trace('json_schema.valid_json') do
+        FastJsonparser.parse(data)
+        true
+      end
     rescue JSON::ParserError
       false
     end
