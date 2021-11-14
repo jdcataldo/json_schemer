@@ -49,27 +49,31 @@ module JSONSchemer
 
   class << self
     def schema(schema, **options)
-      case schema
-      when String
-        Datadog.tracer.trace('json_schema.schema') do
-          Animoto.logger.info "Validating JSON"
-          $stdout.puts "Validating JSON"
-          schema = FastJsonparser.parse(schema)
+      Datadog.tracer.trace('json_schema.schema') do
+        case schema
+        when String
+          Datadog.tracer.trace('json_schema.string') do
+            Animoto.logger.info "Validating JSON"
+            $stdout.puts "Validating JSON"
+            schema = FastJsonparser.parse(schema)
+          end
+        when Pathname
+          Datadog.tracer.trace('json_schema.pathname') do
+            Animoto.logger.info "Validating PATHNAME"
+            $stdout.puts "Validating PATHNAME"
+            uri = URI.parse(File.join('file:', schema.realpath))
+            if options.key?(:ref_resolver)
+              schema = FILE_URI_REF_RESOLVER.call(uri)
+            else
+              ref_resolver = CachedRefResolver.new(&FILE_URI_REF_RESOLVER)
+              schema = ref_resolver.call(uri)
+              options[:ref_resolver] = ref_resolver
+            end
+            schema[draft_class(schema)::ID_KEYWORD] ||= uri.to_s
+          end
         end
-      when Pathname
-        Animoto.logger.info "Validating PATHNAME"
-        $stdout.puts "Validating PATHNAME"
-        uri = URI.parse(File.join('file:', schema.realpath))
-        if options.key?(:ref_resolver)
-          schema = FILE_URI_REF_RESOLVER.call(uri)
-        else
-          ref_resolver = CachedRefResolver.new(&FILE_URI_REF_RESOLVER)
-          schema = ref_resolver.call(uri)
-          options[:ref_resolver] = ref_resolver
-        end
-        schema[draft_class(schema)::ID_KEYWORD] ||= uri.to_s
+        draft_class(schema).new(schema, **options)
       end
-      draft_class(schema).new(schema, **options)
     end
 
   private
