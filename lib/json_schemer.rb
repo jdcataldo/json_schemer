@@ -51,8 +51,14 @@ module JSONSchemer
     def schema(schema, **options)
       case schema
       when String
-        schema = FastJsonparser.parse(schema)
+        Datadog.tracer.trace('json_schema.schema') do
+          Animoto.logger.info "Validating JSON"
+          $stdout.puts "Validating JSON"
+          schema = FastJsonparser.parse(schema)
+        end
       when Pathname
+        Animoto.logger.info "Validating PATHNAME"
+        $stdout.puts "Validating PATHNAME"
         uri = URI.parse(File.join('file:', schema.realpath))
         if options.key?(:ref_resolver)
           schema = FILE_URI_REF_RESOLVER.call(uri)
