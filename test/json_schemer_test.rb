@@ -993,7 +993,7 @@ class JSONSchemerTest < Minitest::Test
       'draft7' => JSONSchemer::Schema::Draft7
     }.each do |version, draft_class|
       output = Dir["JSON-Schema-Test-Suite/tests/#{version}/**/*.json"].each_with_object({}) do |file, file_output|
-        file_output[file] = JSON.parse(File.read(file)).map do |defn|
+        file_output[file] = FastJsonparser.parse(File.read(file)).map do |defn|
           defn.fetch('tests').map do |test|
             errors = draft_class.new(
               defn.fetch('schema'),
@@ -1001,13 +1001,13 @@ class JSONSchemerTest < Minitest::Test
                 # Resolve localhost test schemas
                 if uri.host == 'localhost'
                   path = Pathname.new(__dir__).join('..', 'JSON-Schema-Test-Suite', 'remotes', uri.path.gsub(/\A\//, ''))
-                  JSON.parse(path.read)
+                  FastJsonparser.parse(path.read)
                 else
                   response = Net::HTTP.get_response(uri)
                   if response.is_a?(Net::HTTPRedirection)
                     response = Net::HTTP.get_response(URI.parse(response.fetch('location')))
                   end
-                  JSON.parse(response.body)
+                  FastJsonparser.parse(response.body)
                 end
               end
             ).validate(test.fetch('data')).to_a
@@ -1024,7 +1024,7 @@ class JSONSchemerTest < Minitest::Test
       if ENV['WRITE_FIXTURES'] == 'true'
         fixture.write("#{JSON.pretty_generate(output)}\n")
       else
-        assert_equal(output, JSON.parse(fixture.read))
+        assert_equal(output, FastJsonparser.parse(fixture.read))
       end
     end
   end

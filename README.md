@@ -108,7 +108,7 @@ JSONSchemer.schema(
 
   # resolve external references
   # 'net/http'/proc/lambda/respond_to?(:call)
-  # 'net/http': proc { |uri| JSON.parse(Net::HTTP.get(uri)) }
+  # 'net/http': proc { |uri| FastJsonparser.parse(Net::HTTP.get(uri)) }
   # default: proc { |uri| raise UnknownRef, uri.to_s }
   ref_resolver: 'net/http'
 )

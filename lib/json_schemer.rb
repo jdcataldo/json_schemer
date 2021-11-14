@@ -44,14 +44,14 @@ module JSONSchemer
     raise InvalidFileURI, 'cannot have a host (use `file:///`)' if uri.host && !uri.host.empty?
     path = uri.path
     path = path[1..-1] if path.match?(WINDOWS_URI_PATH_REGEX)
-    JSON.parse(File.read(path))
+    FastJsonparser.parse(File.read(path))
   end
 
   class << self
     def schema(schema, **options)
       case schema
       when String
-        schema = JSON.parse(schema)
+        schema = FastJsonparser.parse(schema)
       when Pathname
         uri = URI.parse(File.join('file:', schema.realpath))
         if options.key?(:ref_resolver)

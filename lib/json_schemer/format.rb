@@ -51,7 +51,7 @@ module JSONSchemer
     end
 
     def valid_json?(data)
-      JSON.parse(data)
+      FastJsonparser.parse(data)
       true
     rescue JSON::ParserError
       false
